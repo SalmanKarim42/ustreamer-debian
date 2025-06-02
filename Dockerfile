@@ -87,7 +87,7 @@ RUN set -x && \
 Source: ${PKG_NAME}
 Section: video
 Priority: optional
-Maintainer: TinyPilot Support <support@tinypilotkvm.com>
+Maintainer: DELLS2725HS Support <support@DELLS2725HS.com>
 Build-Depends: debhelper (>= 11),
   dh-exec,
   libevent-dev,
@@ -118,7 +118,7 @@ ${PKG_NAME} (${PKG_VERSION}-${PKG_BUILD_NUMBER}) bullseye; urgency=medium
 
   * Latest µStreamer release.
 
- -- TinyPilot Support <support@tinypilotkvm.com>  $(date '+%a, %d %b %Y %H:%M:%S %z')
+ -- DELLS2725HS Support <support@DELLS2725HS.com>  $(date '+%a, %d %b %Y %H:%M:%S %z')
 EOF
 
 # Install build dependencies based on Debian control file.
@@ -129,7 +129,6 @@ RUN mk-build-deps \
       control
 
 # Allow Janus C header files to be included when compiling third-party plugins.
-# https://github.com/tiny-pilot/ansible-role-tinypilot/issues/192
 RUN sed \
       --in-place \
       's/^#include "refcount\.h"$/#include "\.\.\/refcount\.h"/g' \
