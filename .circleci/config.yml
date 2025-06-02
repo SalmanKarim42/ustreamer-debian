@@ -1,0 +1,87 @@
+version: 2.1
+executors:
+  ubuntu:
+    docker:
+      - image: cimg/base:2024.02
+jobs:
+  check_whitespace:
+    executor: ubuntu
+    steps:
+      - checkout
+      - run:
+          name: Check for trailing whitespace
+          command: ./dev-scripts/check-trailing-whitespace
+      - run:
+          name: Check that all text files end in a trailing newline
+          command: ./dev-scripts/check-trailing-newline
+  check_bash:
+    docker:
+      - image: koalaman/shellcheck-alpine:v0.9.0
+    steps:
+      - run:
+          name: Install dependencies
+          command: apk add bash git openssh-client grep
+      - checkout
+      - run:
+          name: Run static analysis on bash scripts
+          command: ./dev-scripts/check-bash
+  build_debian_package:
+    executor: ubuntu
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build Debian package
+          command: ./dev-scripts/build-debian-pkg linux/arm/v7
+      - run:
+          name: Print Debian package contents
+          command: |
+            set -exu
+            while read -r file; do
+              dpkg --contents "${file}"
+            done < <(find . -name '*.deb')
+      - persist_to_workspace:
+          root: build
+          paths:
+            - "*.deb"
+      - store_artifacts:
+          path: build
+  lint_debian_package:
+    executor: ubuntu
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Update apt packages
+          command: sudo apt-get update
+      - run:
+          name: Install lintian
+          command: sudo apt-get install -y lintian=2.114.0ubuntu1
+      - run:
+          name: Print lintian version
+          command: lintian --version
+      - run:
+          name: Run lintian
+          command: |
+            set -exu
+            while read -r file; do
+              lintian \
+                --check \
+                --no-tag-display-limit \
+                --suppress-tags-from-file .lintianignore \
+                --no-cfg \
+                --fail-on warning,error \
+                "${file}"
+            done < <(find . -name '*.deb')
+workflows:
+  test:
+    jobs:
+      - check_whitespace
+      - check_bash
+      - build_debian_package
+      - lint_debian_package:
+          requires:
+            - build_debian_package
