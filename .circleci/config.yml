@@ -76,44 +76,12 @@ jobs:
                 --fail-on warning,error \
                 "${file}"
             done < <(find . -name '*.deb')
-# workflows:
-#   test:
-#     jobs:
-#       - check_whitespace
-#       - check_bash
-#       - build_debian_package
-#       - lint_debian_package:
-#           requires:
-#             - build_debian_package
 workflows:
   test:
     jobs:
-      - check_whitespace:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/  # run on all tags
-
-      - check_bash:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
-
-      - build_debian_package:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
-
+      - check_whitespace
+      - check_bash
+      - build_debian_package
       - lint_debian_package:
           requires:
             - build_debian_package
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /.*/
